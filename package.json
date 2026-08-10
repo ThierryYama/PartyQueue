@@ -1,0 +1,32 @@
+{
+  "name": "partyqueue",
+  "version": "0.0.0",
+  "private": true,
+  "license": "SEE LICENSE IN LICENSE",
+  "description": "A decision engine that helps groups choose what to play.",
+  "packageManager": "pnpm@11.21.0",
+  "engines": {
+    "node": ">=22.12.0",
+    "pnpm": ">=11.0.0"
+  },
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "db:generate": "pnpm --filter @partyqueue/database generate",
+    "db:migrate": "pnpm --filter @partyqueue/database migrate:dev",
+    "db:studio": "pnpm --filter @partyqueue/database studio",
+    "infra:up": "docker compose up -d postgres redis",
+    "infra:down": "docker compose stop postgres redis",
+    "docker:up": "docker compose --profile app up --build",
+    "docker:down": "docker compose --profile app down"
+  },
+  "devDependencies": {
+    "prettier": "3.9.6",
+    "turbo": "2.10.9",
+    "typescript": "5.9.3"
+  }
+}

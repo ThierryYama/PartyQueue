@@ -1,0 +1,29 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build outputs
+.next/
+dist/
+coverage/
+.turbo/
+
+# Generated code
+packages/database/src/generated/
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Editors and operating systems
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.DS_Store
+
+# Logs
+*.log
+*.tsbuildinfo
+pnpm-debug.log*

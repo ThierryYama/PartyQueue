@@ -1,0 +1,7 @@
+# O mantenedor é responsável pela revisão e aprovação final.
+* @ThierryYama
+
+# Áreas de infraestrutura e dados exigem a mesma revisão explícita.
+/.github/ @ThierryYama
+/compose.yml @ThierryYama
+/packages/database/prisma/migrations/ @ThierryYama

@@ -1,0 +1,9 @@
+{
+  "name": "@partyqueue/config",
+  "version": "0.0.0",
+  "private": true,
+  "exports": {
+    "./typescript/base.json": "./typescript/base.json",
+    "./typescript/nest.json": "./typescript/nest.json"
+  }
+}
