@@ -1,0 +1,123 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum ExternalProvider {
+  STEAM
+}
+
+enum LibrarySyncStatus {
+  NOT_CONNECTED
+  SYNC_PENDING
+  SYNCING
+  SYNCED
+  PRIVATE
+  FAILED
+  STALE
+}
+
+enum MetadataStatus {
+  PENDING
+  COMPLETE
+  PARTIAL
+  FAILED
+}
+
+model User {
+  id               String            @id @default(uuid()) @db.Uuid
+  displayName      String
+  avatarUrl        String?
+  createdAt        DateTime          @default(now()) @db.Timestamptz(3)
+  updatedAt        DateTime          @updatedAt @db.Timestamptz(3)
+  externalAccounts ExternalAccount[]
+  games            UserGame[]
+
+  @@map("users")
+}
+
+model ExternalAccount {
+  id                String            @id @default(uuid()) @db.Uuid
+  userId            String            @db.Uuid
+  provider          ExternalProvider
+  externalId        String
+  username          String?
+  metadata          Json              @default("{}")
+  librarySyncStatus LibrarySyncStatus @default(NOT_CONNECTED)
+  librarySyncedAt   DateTime?         @db.Timestamptz(3)
+  createdAt         DateTime          @default(now()) @db.Timestamptz(3)
+  updatedAt         DateTime          @updatedAt @db.Timestamptz(3)
+  user              User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, externalId])
+  @@index([userId])
+  @@map("external_accounts")
+}
+
+model Game {
+  id               String                @id @default(uuid()) @db.Uuid
+  title            String
+  slug             String                @unique
+  coverUrl         String?
+  releaseDate      DateTime?             @db.Date
+  metadataStatus   MetadataStatus        @default(PENDING)
+  createdAt        DateTime              @default(now()) @db.Timestamptz(3)
+  updatedAt        DateTime              @updatedAt @db.Timestamptz(3)
+  externalMappings GameExternalMapping[]
+  metadata         GameMetadata?
+  owners           UserGame[]
+
+  @@map("games")
+}
+
+model GameExternalMapping {
+  id             String           @id @default(uuid()) @db.Uuid
+  gameId         String           @db.Uuid
+  platform       ExternalProvider
+  externalGameId String
+  game           Game             @relation(fields: [gameId], references: [id], onDelete: Cascade)
+
+  @@unique([platform, externalGameId])
+  @@index([gameId])
+  @@map("game_external_mappings")
+}
+
+model GameMetadata {
+  gameId               String   @id @db.Uuid
+  genres               String[]
+  categories           String[]
+  supportsOnlineCoop   Boolean?
+  supportsLocalCoop    Boolean?
+  supportsPvp          Boolean?
+  minPlayers           Int?
+  maxPlayers           Int?
+  estimatedSessionMin  Int?
+  difficultyScore      Decimal? @db.Decimal(3, 2)
+  confidenceScore      Decimal? @db.Decimal(3, 2)
+  raw                   Json     @default("{}")
+  sourceUpdatedAt      DateTime? @db.Timestamptz(3)
+  updatedAt            DateTime @updatedAt @db.Timestamptz(3)
+  game                 Game     @relation(fields: [gameId], references: [id], onDelete: Cascade)
+
+  @@map("game_metadata")
+}
+
+model UserGame {
+  userId          String           @db.Uuid
+  gameId          String           @db.Uuid
+  platform        ExternalProvider
+  owned           Boolean          @default(true)
+  playtimeMinutes Int              @default(0)
+  lastPlayedAt    DateTime?        @db.Timestamptz(3)
+  syncedAt        DateTime         @db.Timestamptz(3)
+  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  game            Game             @relation(fields: [gameId], references: [id], onDelete: Cascade)
+
+  @@id([userId, gameId, platform])
+  @@index([gameId])
+  @@map("user_games")
+}
