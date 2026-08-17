@@ -10,7 +10,7 @@ WORKDIR /workspace
 COPY . .
 
 RUN pnpm install --frozen-lockfile
-RUN pnpm --filter @partyqueue/api build
+RUN pnpm --filter @partyqueue/api... build
 RUN pnpm --filter @partyqueue/api deploy --prod --legacy /opt/partyqueue-api
 
 FROM node:22.22.2-bookworm-slim AS runtime

@@ -5,6 +5,7 @@ node_modules/
 # Build outputs
 .next/
 dist/
+dist-test/
 coverage/
 .turbo/
 
@@ -27,3 +28,5 @@ packages/database/src/generated/
 *.log
 *.tsbuildinfo
 pnpm-debug.log*
+
+FrontEndPrototype/

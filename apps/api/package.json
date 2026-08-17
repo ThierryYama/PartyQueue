@@ -12,6 +12,7 @@
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
     "lint": "eslint \"src/**/*.ts\"",
+    "test": "tsc -p tsconfig.test.json && node --test dist-test/auth/tests/*.spec.js",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
@@ -19,10 +20,12 @@
     "@nestjs/common": "11.1.28",
     "@nestjs/core": "11.1.28",
     "@nestjs/platform-express": "11.1.28",
+    "@partyqueue/database": "workspace:*",
     "bullmq": "6.0.9",
     "ioredis": "6.0.0",
     "reflect-metadata": "^0.2.2",
-    "rxjs": "^7.8.1"
+    "rxjs": "^7.8.1",
+    "zod": "4.4.3"
   },
   "devDependencies": {
     "@partyqueue/contracts": "workspace:*",
