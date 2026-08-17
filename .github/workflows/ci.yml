@@ -41,6 +41,9 @@ jobs:
         env:
           POSTGRES_PASSWORD: ci-compose-validation-only
           DATABASE_URL_DOCKER: ci-compose-validation-only
+          SESSION_SECRET: ci-compose-validation-only-not-a-runtime-secret
+          STEAM_API_KEY: ci-compose-validation-only-not-a-runtime-key
+          STEAM_OPENID_RETURN_URL: http://localhost:3333/api/v1/auth/steam/callback
 
       - name: Generate Prisma Client
         run: pnpm db:generate
