@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
+import styles from './authenticated-dashboard.module.css';
 
 type User = {
   id: string;
@@ -62,91 +63,89 @@ export function AuthenticatedDashboard() {
   }
 
   if (state.status !== 'ready') {
-    return (
-      <main className="mx-auto grid min-h-screen w-full max-w-3xl place-items-center px-6 py-12">
-        <div className="w-full rounded-2xl border border-line bg-surface p-8 text-center">
-          <p className="font-mono text-xs tracking-[0.14em] text-muted uppercase">
-            {state.status === 'loading' ? 'validando sessão' : 'sessão ausente'}
-          </p>
-          <h1 className="font-display mt-4 text-3xl font-semibold">
-            {state.status === 'loading'
-              ? 'Preparando seu lobby…'
-              : 'Entre com a Steam para abrir seu lobby.'}
-          </h1>
-          {state.status !== 'loading' ? (
-            <Link
-              className="mt-7 inline-flex rounded-xl bg-decision px-5 py-3 font-semibold text-[#16120a]"
-              href="/"
-            >
-              Voltar para o login
-            </Link>
-          ) : null}
-        </div>
-      </main>
-    );
+    return <SessionState state={state.status} />;
   }
 
   const { user } = state;
+  const firstName = user.displayName.trim().split(/\s+/)[0] || user.displayName;
 
   return (
-    <main className="mx-auto min-h-screen w-full max-w-6xl px-6 py-7 sm:px-10">
-      <header className="flex items-center justify-between border-b border-line pb-6">
+    <div className={styles.page}>
+      <div aria-hidden="true" className={styles.glow} />
+
+      <header className={styles.header}>
         <Link
-          className="font-display font-semibold tracking-[0.16em] uppercase"
+          aria-label="PartyQueue — início"
+          className={styles.wordmark}
           href="/"
         >
-          Party<span className="text-decision">Queue</span>
+          <span aria-hidden="true" className={styles.dotMark}>
+            <span />
+            <span />
+            <span />
+          </span>
+          <span>Party</span>
+          <span className={styles.queue}>Queue</span>
         </Link>
-        <button
-          className="font-mono text-xs text-muted transition hover:text-foreground disabled:opacity-50"
-          disabled={isLoggingOut}
-          onClick={() => void logout()}
-          type="button"
-        >
-          {isLoggingOut ? 'saindo…' : 'sair'}
-        </button>
+
+        <div className={styles.headerRight}>
+          <Link className={styles.headerLink} href="/">
+            Ajuda
+          </Link>
+          <button
+            className={styles.headerLink}
+            disabled={isLoggingOut}
+            onClick={() => void logout()}
+            type="button"
+          >
+            {isLoggingOut ? 'Saindo…' : 'Sair'}
+          </button>
+          <Avatar
+            className={styles.miniAvatar}
+            name={user.displayName}
+            src={user.avatarUrl}
+            size={30}
+          />
+        </div>
       </header>
 
-      <section className="py-12 sm:py-16">
-        <p className="font-mono text-xs tracking-[0.14em] text-decision uppercase">
-          identidade confirmada
-        </p>
-        <h1 className="font-display mt-4 text-4xl font-semibold tracking-tight sm:text-5xl">
-          Seu lugar na party está reservado.
-        </h1>
-        <p className="mt-4 max-w-2xl text-lg leading-8 text-muted">
-          A Steam já identifica você. A biblioteca será a próxima peça para
-          descobrir o que o grupo consegue jogar.
-        </p>
+      <main className={styles.main}>
+        <section className={styles.intro}>
+          <p className={styles.eyebrow}>Dashboard // {firstName}</p>
+          <h1 className={styles.pageTitle}>
+            Boa noite. Vamos deixar tudo pronto pra primeira party.
+          </h1>
+          <p className={styles.pageSub}>
+            Faltam 2 passos pra você conseguir montar um grupo e receber as
+            primeiras recomendações.
+          </p>
+        </section>
 
-        <div className="mt-10 grid gap-6 lg:grid-cols-[0.8fr_1.2fr]">
-          <article className="rounded-2xl border border-line bg-surface p-6">
-            <div className="flex items-center gap-4">
-              {user.avatarUrl ? (
-                <Image
-                  alt={`Avatar de ${user.displayName}`}
-                  className="size-16 rounded-xl border border-steam-blue/25"
-                  height={64}
-                  src={user.avatarUrl}
-                  width={64}
-                />
-              ) : (
-                <span className="grid size-16 place-items-center rounded-xl bg-surface-raised font-display text-xl">
-                  {user.displayName.slice(0, 2).toUpperCase()}
-                </span>
-              )}
-              <div className="min-w-0">
-                <p className="font-display truncate text-xl font-semibold">
-                  {user.displayName}
-                </p>
-                <p className="mt-1 font-mono text-[0.68rem] text-muted">
-                  SteamID · {user.steam.id}
+        <div className={styles.cardGrid}>
+          <article className={`${styles.card} ${styles.profileCard}`}>
+            <div className={styles.profileTop}>
+              <Avatar
+                className={styles.avatarLarge}
+                name={user.displayName}
+                src={user.avatarUrl}
+                size={56}
+              />
+              <div className={styles.profileIdentity}>
+                <h2 className={styles.profileName}>{user.displayName}</h2>
+                <p className={styles.profileMeta}>
+                  SteamID <span aria-hidden="true">·</span> {user.steam.id}
                 </p>
               </div>
             </div>
+
+            <p className={styles.statusPill}>
+              <span aria-hidden="true" className={styles.statusDot} />
+              Identidade conectada
+            </p>
+
             {user.steam.profileUrl ? (
               <a
-                className="mt-6 inline-flex text-sm text-steam-blue hover:underline"
+                className={styles.profileLink}
                 href={user.steam.profileUrl}
                 rel="noreferrer"
                 target="_blank"
@@ -156,39 +155,133 @@ export function AuthenticatedDashboard() {
             ) : null}
           </article>
 
-          <article className="rounded-2xl border border-line bg-surface p-6 sm:p-7">
-            <p className="font-mono text-[0.68rem] tracking-[0.14em] text-muted uppercase">
-              onboarding · 1 de 3
-            </p>
-            <ol className="mt-6 space-y-5">
-              <Step done label="Conectar identidade Steam" />
-              <Step label="Sincronizar biblioteca" />
-              <Step label="Montar a primeira party" />
-            </ol>
-            <div className="mt-7 rounded-xl border border-decision/25 bg-decision/[0.06] p-4 text-sm leading-6 text-muted">
-              Próxima etapa: importar seus jogos com privacidade e tratar
-              bibliotecas privadas como um estado normal.
+          <article className={`${styles.card} ${styles.onboardingCard}`}>
+            <p className={styles.eyebrow}>Onboarding · 1 de 3</p>
+
+            <div
+              aria-label="Progresso do onboarding: 1 de 3 etapas concluídas"
+              aria-valuemax={3}
+              aria-valuemin={0}
+              aria-valuenow={1}
+              className={styles.progressTrack}
+              role="progressbar"
+            >
+              <span className={styles.progressFill} />
             </div>
+
+            <ol className={styles.stepList}>
+              <Step done label="Conectar identidade Steam" number={1} />
+              <Step active label="Sincronizar biblioteca" number={2} />
+              <Step label="Montar a primeira party" number={3} />
+            </ol>
+
+            <p className={styles.hintBox}>
+              Próxima etapa: importar seus jogos com privacidade e tratar
+              bibliotecas privadas como um estado normal, não um erro.
+            </p>
           </article>
         </div>
-      </section>
+      </main>
+
+      <footer className={styles.footer}>
+        <span>steam-first · decisão em grupo</span>
+        <span>onboarding · passo 2 de 3</span>
+      </footer>
+    </div>
+  );
+}
+
+function SessionState({
+  state,
+}: {
+  state: Exclude<LoadState['status'], 'ready'>;
+}) {
+  const isLoading = state === 'loading';
+
+  return (
+    <main className={styles.sessionPage}>
+      <div aria-hidden="true" className={styles.glow} />
+      <div className={styles.sessionCard}>
+        <p className={styles.eyebrow}>
+          {isLoading ? 'validando sessão' : 'sessão ausente'}
+        </p>
+        <h1 className={styles.sessionTitle}>
+          {isLoading
+            ? 'Preparando seu lobby…'
+            : 'Entre com a Steam para abrir seu lobby.'}
+        </h1>
+        {!isLoading ? (
+          <Link className={styles.loginLink} href="/">
+            Voltar para o login
+          </Link>
+        ) : null}
+      </div>
     </main>
   );
 }
 
-function Step({ done = false, label }: { done?: boolean; label: string }) {
+function Avatar({
+  className,
+  name,
+  size,
+  src,
+}: {
+  className: string;
+  name: string;
+  size: number;
+  src: string | null;
+}) {
+  if (src) {
+    return (
+      <Image
+        alt={`Avatar de ${name}`}
+        className={className}
+        height={size}
+        src={src}
+        width={size}
+      />
+    );
+  }
+
   return (
-    <li className="flex items-center gap-3">
-      <span
-        className={`grid size-7 place-items-center rounded-full border font-mono text-xs ${
-          done
-            ? 'border-decision bg-decision text-[#16120a]'
-            : 'border-line text-muted'
-        }`}
-      >
-        {done ? '✓' : '·'}
+    <span aria-label={`Avatar de ${name}`} className={className} role="img">
+      {name.slice(0, 2).toUpperCase()}
+    </span>
+  );
+}
+
+function Step({
+  active = false,
+  done = false,
+  label,
+  number,
+}: {
+  active?: boolean;
+  done?: boolean;
+  label: string;
+  number: number;
+}) {
+  const stateClass = done
+    ? styles.stepDone
+    : active
+      ? styles.stepActive
+      : styles.stepPending;
+
+  return (
+    <li className={`${styles.step} ${stateClass}`}>
+      <span aria-hidden="true" className={styles.stepIcon}>
+        {done ? '✓' : number}
       </span>
-      <span className={done ? 'text-foreground' : 'text-muted'}>{label}</span>
+      <span className={styles.stepLabel}>{label}</span>
+      {active ? (
+        <button
+          aria-disabled="true"
+          className={styles.stepAction}
+          type="button"
+        >
+          Sincronizar
+        </button>
+      ) : null}
     </li>
   );
 }
