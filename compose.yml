@@ -48,6 +48,9 @@ services:
       DATABASE_URL: ${DATABASE_URL_DOCKER:?Set DATABASE_URL_DOCKER in .env}
       REDIS_URL: redis://redis:6379
       WEB_URL: http://localhost:${WEB_PORT:-3000}
+      SESSION_SECRET: ${SESSION_SECRET:?Set SESSION_SECRET in .env}
+      STEAM_API_KEY: ${STEAM_API_KEY:?Set STEAM_API_KEY in .env}
+      STEAM_OPENID_RETURN_URL: http://localhost:${API_PORT:-3333}/api/v1/auth/steam/callback
       PORT: 3333
     ports:
       - '127.0.0.1:${API_PORT:-3333}:3333'

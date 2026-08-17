@@ -11,10 +11,11 @@
   },
   "scripts": {
     "build": "turbo run build",
-    "dev": "turbo run dev",
+    "dev": "node --env-file-if-exists=.env node_modules/turbo/bin/turbo run dev",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint": "turbo run lint",
+    "test": "turbo run test",
     "typecheck": "turbo run typecheck",
     "db:generate": "pnpm --filter @partyqueue/database generate",
     "db:migrate": "pnpm --filter @partyqueue/database migrate:dev",

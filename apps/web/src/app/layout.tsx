@@ -2,7 +2,10 @@ import type { Metadata } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'PartyQueue',
+  title: {
+    default: 'PartyQueue',
+    template: '%s · PartyQueue',
+  },
   description: 'Descubra o que seu grupo consegue jogar hoje.',
 };
 
