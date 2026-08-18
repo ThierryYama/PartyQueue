@@ -695,7 +695,6 @@
   .footer {
     width: calc(100% - 44px);
   }
-
 }
 
 @media (max-width: 620px) {
