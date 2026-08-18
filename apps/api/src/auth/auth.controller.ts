@@ -10,17 +10,17 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { timingSafeEqual } from 'node:crypto';
+import { JobsService } from '../jobs/jobs.service';
 import { AuthConfig } from './auth.config';
 import { AuthService } from './auth.service';
 import type { OpenIdCallbackQuery } from './auth.types';
 import { parseCookies, serializeCookie } from './cookies';
+import { SESSION_COOKIE, SessionService } from './session.service';
 import { SignedTokenService } from './signed-token.service';
 import { SteamIdentityProvider } from './steam-identity.provider';
 import { SteamOpenIdService } from './steam-openid.service';
 
 const OPENID_STATE_COOKIE = 'partyqueue_openid_state';
-const SESSION_COOKIE = 'partyqueue_session';
-
 type ApiRequest = { headers: { cookie?: string } };
 type ApiResponse = {
   redirect(status: number, url: string): void;
@@ -35,7 +35,9 @@ export class AuthController {
   constructor(
     private readonly auth: AuthService,
     private readonly config: AuthConfig,
+    private readonly jobs: JobsService,
     private readonly openId: SteamOpenIdService,
+    private readonly session: SessionService,
     private readonly steam: SteamIdentityProvider,
     private readonly tokens: SignedTokenService,
   ) {}
@@ -85,6 +87,20 @@ export class AuthController {
       const steamId = await this.openId.verify(query, state);
       const profile = await this.steam.getProfile(steamId);
       const user = await this.auth.signInWithSteam(profile);
+      const syncTarget = await this.auth.librarySyncTarget(user.id);
+      if (syncTarget.shouldSync) {
+        try {
+          await this.jobs.enqueueLibrarySync({
+            externalAccountId: syncTarget.externalAccountId,
+            userId: user.id,
+          });
+        } catch (error) {
+          await this.auth.markLibrarySyncFailed(syncTarget.externalAccountId);
+          this.logger.warn(
+            `Login succeeded but library sync could not be queued: ${error instanceof Error ? error.message : 'unknown queue error'}`,
+          );
+        }
+      }
       const session = this.tokens.createSession(user.id);
 
       response.setHeader('Set-Cookie', [
@@ -114,16 +130,9 @@ export class AuthController {
 
   @Get('me')
   async me(@Req() request: ApiRequest) {
-    try {
-      const session = parseCookies(request.headers.cookie).get(SESSION_COOKIE);
-      if (!session) throw new Error('Session cookie is missing.');
-
-      const payload = this.tokens.verifySession(session);
-      const user = await this.auth.findUser(payload.sub!);
-      if (!user) throw new Error('Session user no longer exists.');
-
-      return { user };
-    } catch {
+    const userId = this.session.authenticatedUserId(request);
+    const user = await this.auth.findUser(userId);
+    if (!user) {
       throw new UnauthorizedException({
         error: {
           code: 'UNAUTHORIZED',
@@ -131,6 +140,8 @@ export class AuthController {
         },
       });
     }
+
+    return { user };
   }
 
   @Post('auth/logout')

@@ -1,6 +1,6 @@
 import { BullModule } from '@nestjs/bullmq';
 import { Module } from '@nestjs/common';
-import { SYSTEM_QUEUE } from './jobs.constants';
+import { LIBRARY_QUEUE, SYSTEM_QUEUE } from './jobs.constants';
 import { getRedisConnection } from './redis-connection';
 import { SystemProcessor } from './system.processor';
 
@@ -12,6 +12,9 @@ import { SystemProcessor } from './system.processor';
     }),
     BullModule.registerQueue({
       name: SYSTEM_QUEUE,
+    }),
+    BullModule.registerQueue({
+      name: LIBRARY_QUEUE,
     }),
   ],
   providers: [SystemProcessor],
