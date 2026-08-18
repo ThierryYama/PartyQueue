@@ -109,4 +109,33 @@ export class AuthRepository {
 
     return user ? toAuthenticatedUser(user) : null;
   }
+
+  async librarySyncTarget(userId: string) {
+    const account = await this.database.client.externalAccount.findFirstOrThrow(
+      {
+        where: { provider: 'STEAM', userId },
+        select: {
+          id: true,
+          librarySyncedAt: true,
+          librarySyncStatus: true,
+        },
+      },
+    );
+    const staleBefore = Date.now() - 24 * 60 * 60 * 1_000;
+
+    return {
+      externalAccountId: account.id,
+      shouldSync:
+        account.librarySyncStatus !== 'SYNCING' &&
+        (!account.librarySyncedAt ||
+          account.librarySyncedAt.getTime() < staleBefore),
+    };
+  }
+
+  async markLibrarySyncFailed(externalAccountId: string) {
+    await this.database.client.externalAccount.update({
+      where: { id: externalAccountId },
+      data: { librarySyncStatus: 'FAILED' },
+    });
+  }
 }

@@ -16,4 +16,12 @@ export class AuthService {
   findUser(userId: string) {
     return this.repository.findByUserId(userId);
   }
+
+  librarySyncTarget(userId: string) {
+    return this.repository.librarySyncTarget(userId);
+  }
+
+  markLibrarySyncFailed(externalAccountId: string) {
+    return this.repository.markLibrarySyncFailed(externalAccountId);
+  }
 }

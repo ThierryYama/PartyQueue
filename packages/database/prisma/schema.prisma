@@ -63,6 +63,7 @@ model Game {
   title            String
   slug             String                @unique
   coverUrl         String?
+  fallbackCoverUrl String?
   releaseDate      DateTime?             @db.Date
   metadataStatus   MetadataStatus        @default(PENDING)
   createdAt        DateTime              @default(now()) @db.Timestamptz(3)

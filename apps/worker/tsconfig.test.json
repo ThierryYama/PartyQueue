@@ -7,5 +7,5 @@
     "rootDir": "./src",
     "sourceMap": false
   },
-  "include": ["src/auth/tests/*.spec.ts", "src/libraries/tests/*.spec.ts"]
+  "include": ["src/library/**/*.ts"]
 }

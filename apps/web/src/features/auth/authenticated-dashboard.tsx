@@ -12,10 +12,23 @@ type User = {
   steam: { id: string; profileUrl: string | null };
 };
 
+type LibrarySyncSummary = {
+  status:
+    | 'NOT_CONNECTED'
+    | 'SYNC_PENDING'
+    | 'SYNCING'
+    | 'SYNCED'
+    | 'PRIVATE'
+    | 'FAILED'
+    | 'STALE';
+  lastSyncedAt: string | null;
+  isStale: boolean;
+};
+
 type LoadState =
   | { status: 'loading' }
   | { status: 'anonymous' }
-  | { status: 'ready'; user: User }
+  | { status: 'ready'; user: User; library: LibrarySyncSummary | null }
   | { status: 'error' };
 
 const apiUrl =
@@ -28,19 +41,30 @@ export function AuthenticatedDashboard() {
   useEffect(() => {
     const controller = new AbortController();
 
-    void fetch(`${apiUrl}/me`, {
-      credentials: 'include',
-      signal: controller.signal,
-    })
-      .then(async (response) => {
-        if (response.status === 401) {
+    void Promise.all([
+      fetch(`${apiUrl}/me`, {
+        credentials: 'include',
+        signal: controller.signal,
+      }),
+      fetch(`${apiUrl}/me/library/sync-status`, {
+        credentials: 'include',
+        signal: controller.signal,
+      }),
+    ])
+      .then(async ([sessionResponse, libraryResponse]) => {
+        if (sessionResponse.status === 401) {
           setState({ status: 'anonymous' });
           return;
         }
-        if (!response.ok) throw new Error('Could not load the session.');
+        if (!sessionResponse.ok) throw new Error('Could not load the session.');
+        if (!libraryResponse.ok && libraryResponse.status !== 404)
+          throw new Error('Could not load the library status.');
 
-        const payload = (await response.json()) as { user: User };
-        setState({ status: 'ready', user: payload.user });
+        const payload = (await sessionResponse.json()) as { user: User };
+        const library = libraryResponse.ok
+          ? ((await libraryResponse.json()) as LibrarySyncSummary)
+          : null;
+        setState({ status: 'ready', user: payload.user, library });
       })
       .catch((error: unknown) => {
         if (error instanceof Error && error.name === 'AbortError') return;
@@ -66,8 +90,12 @@ export function AuthenticatedDashboard() {
     return <SessionState state={state.status} />;
   }
 
-  const { user } = state;
+  const { library, user } = state;
   const firstName = user.displayName.trim().split(/\s+/)[0] || user.displayName;
+  const libraryComplete = Boolean(
+    library?.lastSyncedAt && ['SYNCED', 'STALE'].includes(library.status),
+  );
+  const completedSteps = libraryComplete ? 2 : 1;
 
   return (
     <div className={styles.page}>
@@ -89,9 +117,6 @@ export function AuthenticatedDashboard() {
         </Link>
 
         <div className={styles.headerRight}>
-          <Link className={styles.headerLink} href="/">
-            Ajuda
-          </Link>
           <button
             className={styles.headerLink}
             disabled={isLoggingOut}
@@ -116,8 +141,9 @@ export function AuthenticatedDashboard() {
             Boa noite. Vamos deixar tudo pronto pra primeira party.
           </h1>
           <p className={styles.pageSub}>
-            Faltam 2 passos pra você conseguir montar um grupo e receber as
-            primeiras recomendações.
+            {libraryComplete
+              ? 'Sua biblioteca está pronta. Falta montar a primeira party para receber recomendações.'
+              : 'Faltam 2 passos pra você conseguir montar um grupo e receber as primeiras recomendações.'}
           </p>
         </section>
 
@@ -140,7 +166,7 @@ export function AuthenticatedDashboard() {
 
             <p className={styles.statusPill}>
               <span aria-hidden="true" className={styles.statusDot} />
-              Identidade conectada
+              Identidade Conectada
             </p>
 
             {user.steam.profileUrl ? (
@@ -156,28 +182,43 @@ export function AuthenticatedDashboard() {
           </article>
 
           <article className={`${styles.card} ${styles.onboardingCard}`}>
-            <p className={styles.eyebrow}>Onboarding · 1 de 3</p>
+            <p className={styles.eyebrow}>Onboarding · {completedSteps} de 3</p>
 
             <div
-              aria-label="Progresso do onboarding: 1 de 3 etapas concluídas"
+              aria-label={`Progresso do onboarding: ${completedSteps} de 3 etapas concluídas`}
               aria-valuemax={3}
               aria-valuemin={0}
-              aria-valuenow={1}
+              aria-valuenow={completedSteps}
               className={styles.progressTrack}
               role="progressbar"
             >
-              <span className={styles.progressFill} />
+              <span
+                className={`${styles.progressFill} ${libraryComplete ? styles.progressTwoThirds : ''}`}
+              />
             </div>
 
             <ol className={styles.stepList}>
               <Step done label="Conectar identidade Steam" number={1} />
-              <Step active label="Sincronizar biblioteca" number={2} />
-              <Step label="Montar a primeira party" number={3} />
+              <Step
+                actionHref="/library"
+                actionLabel={libraryComplete ? 'Revisar' : 'Sincronizar'}
+                active={!libraryComplete}
+                done={libraryComplete}
+                label="Sincronizar e conferir biblioteca"
+                number={2}
+              />
+              <Step
+                actionLabel={libraryComplete ? 'Semana 3' : undefined}
+                active={libraryComplete}
+                label="Montar a primeira party"
+                number={3}
+              />
             </ol>
 
             <p className={styles.hintBox}>
-              Próxima etapa: importar seus jogos com privacidade e tratar
-              bibliotecas privadas como um estado normal, não um erro.
+              {libraryComplete
+                ? 'Próxima etapa: criar ou entrar em um grupo. Esse é o início da Semana 3 definida no MVP.'
+                : 'Próxima etapa: importar seus jogos com privacidade e tratar bibliotecas privadas como um estado normal, não um erro.'}
             </p>
           </article>
         </div>
@@ -185,7 +226,7 @@ export function AuthenticatedDashboard() {
 
       <footer className={styles.footer}>
         <span>steam-first · decisão em grupo</span>
-        <span>onboarding · passo 2 de 3</span>
+        <span>onboarding · {completedSteps} de 3 concluídos</span>
       </footer>
     </div>
   );
@@ -251,11 +292,15 @@ function Avatar({
 }
 
 function Step({
+  actionHref,
+  actionLabel,
   active = false,
   done = false,
   label,
   number,
 }: {
+  actionHref?: string;
+  actionLabel?: string;
   active?: boolean;
   done?: boolean;
   label: string;
@@ -273,14 +318,12 @@ function Step({
         {done ? '✓' : number}
       </span>
       <span className={styles.stepLabel}>{label}</span>
-      {active ? (
-        <button
-          aria-disabled="true"
-          className={styles.stepAction}
-          type="button"
-        >
-          Sincronizar
-        </button>
+      {actionHref && actionLabel ? (
+        <Link className={styles.stepAction} href={actionHref}>
+          {actionLabel}
+        </Link>
+      ) : active && actionLabel ? (
+        <span className={styles.stepMeta}>{actionLabel}</span>
       ) : null}
     </li>
   );

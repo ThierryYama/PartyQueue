@@ -10,8 +10,8 @@ WORKDIR /workspace
 COPY . .
 
 RUN pnpm install --frozen-lockfile
-RUN pnpm --filter @partyqueue/api... build
-RUN pnpm --filter @partyqueue/api deploy --prod --legacy /opt/partyqueue-api
+RUN DATABASE_URL="postgresql://build:build@localhost:5432/partyqueue" pnpm --filter @partyqueue/api... build
+RUN pnpm --filter @partyqueue/api deploy --prod /opt/partyqueue-api
 
 FROM node:22.22.2-bookworm-slim AS runtime
 

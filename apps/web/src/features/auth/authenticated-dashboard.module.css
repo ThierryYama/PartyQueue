@@ -310,6 +310,10 @@
   );
 }
 
+.progressTwoThirds {
+  width: 67%;
+}
+
 .stepList {
   display: flex;
   flex-direction: column;
@@ -376,16 +380,25 @@
   border-radius: 7px;
   background: rgb(79 209 197 / 0.08);
   color: var(--dashboard-teal);
-  cursor: default;
+  cursor: pointer;
   font-family: var(--font-mono);
   font-size: 11px;
+  text-decoration: none;
+}
+
+.stepMeta {
+  margin-left: auto;
+  color: var(--dashboard-ink-muted);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
 
 .hintBox {
   margin: 0;
   padding: 12px 14px;
   border: 1px solid var(--dashboard-border);
-  border-left: 2px solid var(--dashboard-amber);
   border-radius: 8px;
   background: rgb(255 255 255 / 0.02);
   color: var(--dashboard-ink-muted);
